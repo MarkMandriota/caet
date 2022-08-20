@@ -27,7 +27,7 @@ import (
 
 var (
 	dstD = flag.String(`d`, `cats`, `cats destination directory`)
-	catP = flag.String(`p`, `https://thiscatdoesnotexist.com/`, `random cats providers splited by ";"`)
+	catP = flag.String(`p`, `https://thiscatdoesnotexist.com/;https://api.thecatapi.com/v1/images/search`, `random cats providers splited by ";"`)
 	catN = flag.Int(`n`, 9, `number of cats to fetch`)
 	numW = flag.Int(`N`, runtime.NumCPU(), `number of workers`)
 )

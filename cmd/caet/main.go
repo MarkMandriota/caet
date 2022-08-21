@@ -15,6 +15,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -39,19 +41,23 @@ func init() {
 func main() {
 	cats := make(chan *caet.CatFile, *catN)
 
-	fetcher := &caet.Fetcher{}
+	fetcher := caet.NewFetcher()
 
 	if *catP != "" {
 		fetcher.SR.SetList(strings.Split(*catP, ";"))
-	} else {
-		fetcher.SR.Load(os.Stdin)
+	} else if err := fetcher.SR.Load(os.Stdin); err != nil {
+		log.Fatalln(err)
 	}
+
+	ctx := context.Background()
 
 	for i := *numW; i > 0; i-- {
-		go fetcher.Run(cats)
+		go fetcher.Run(ctx, cats)
 	}
 
-	os.Mkdir(*dstD, 0777)
+	if err := os.Mkdir(*dstD, 0777); err != nil && !errors.Is(err, os.ErrExist) {
+		log.Fatal(err)
+	}
 
 	for i := 0; i < *catN; i++ {
 		catF := <-cats
@@ -63,8 +69,12 @@ func main() {
 			log.Printf("error creating file %s: %v\n", path, err)
 		}
 
-		file.Write(catF.Body)
+		if _, err := file.Write(catF.Body); err != nil {
+			log.Printf("error writing file %s: %v\n", path, err)
+		}
 
 		file.Close()
+
+		fmt.Printf("\rfetched: %d", i+1)
 	}
 }

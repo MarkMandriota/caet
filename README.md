@@ -2,7 +2,7 @@
 
 ## Installing
 ```bash
-go install github.com/MarkMandriota/caet/cmd/caet
+go install github.com/MarkMandriota/caet
 ```
 
 ## Usage

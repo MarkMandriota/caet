@@ -15,58 +15,72 @@
 package caet
 
 import (
+	"bytes"
+	"context"
 	"crypto/md5"
-	"io"
-	"net/http"
 	"sync"
+
+	http "github.com/valyala/fasthttp"
 )
 
 type CatFile struct {
 	Body []byte
-	Kind string
+	Kind []byte
 }
 
-func NewCatFile(body []byte, kind string) *CatFile {
+func NewCatFile(body []byte, kind []byte) *CatFile {
 	return &CatFile{body, kind}
 }
 
 type Fetcher struct {
 	SR SingularReferer
 
-	Client http.Client
+	client *http.Client
 
 	hashes sync.Map
 }
 
-func (f *Fetcher) Run(cats chan<- *CatFile) {
-	for {
-		cats <- NewCatFile(f.FetchNewer())
+func NewFetcher() *Fetcher {
+	return &Fetcher{
+		client: &http.Client{},
 	}
 }
 
-func (f *Fetcher) FetchNewer() (body []byte, kind string) {
-next:
-	ref := f.SR.Next()
+func (f *Fetcher) Run(ctx context.Context, cats chan<- *CatFile) {
 	for {
-		resp, err := f.Client.Get(ref)
-		if err != nil {
+		select {
+		case cats <- NewCatFile(f.FetchNewer()):
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+
+func (f *Fetcher) FetchNewer() (body []byte, kind []byte) {
+	res := http.AcquireResponse()
+	req := http.AcquireRequest()
+
+next:
+	req.SetRequestURI(f.SR.Next())
+	for {
+		if err := f.client.Do(req, res); err != nil {
 			goto next
 		}
 
-		text, err := io.ReadAll(resp.Body)
-		if err != nil {
-			continue
-		}
+		mode, kind := readContentType(res.Header.Peek("Content-Type"))
 
-		kind, typ := readContentType(resp.Header.Get("Content-Type"))
+		body = res.Body()
 
-		if kind == "image" {
-			if _, ok := f.hashes.LoadOrStore(md5.Sum(text), struct{}{}); ok {
+		if bytes.Equal(mode, []byte("image")) {
+			if _, ok := f.hashes.LoadOrStore(md5.Sum(body), struct{}{}); ok {
 				goto next
 			}
-			return text, typ
+
+			http.ReleaseRequest(req)
+			http.ReleaseResponse(res)
+			return body, kind
 		}
 
-		ref = string(rWebReference.Find(text))
+		req.SetRequestURIBytes(rWebReference.Find(body))
 	}
 }

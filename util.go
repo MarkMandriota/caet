@@ -14,12 +14,12 @@
 
 package caet
 
-func readContentType(src string) (k string, t string) {
+func readContentType(src []byte) (k []byte, t []byte) {
 	for i, r := range src {
 		if r == '/' {
 			return src[:i], src[i+1:]
 		}
 	}
 
-	return "", ""
+	return nil, nil
 }

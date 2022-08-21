@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"log"
+	"strings"
 	"sync"
 
 	"testing"
@@ -54,18 +55,18 @@ func TestFetcherFetchNewer(t *testing.T) {
 	}{
 		{
 			name: "direct API",
-			addr: "http://" + addr + iPath,
+			addr: "http://" + addr + dPath,
 		},
 		{
 			name: "indirect API",
-			addr: "http://" + addr + dPath,
+			addr: "http://" + addr + iPath,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			fetcher := NewFetcher()
-			fetcher.SR.SetList([]string{test.addr})
+			fetcher.SR.Load(strings.NewReader(test.addr))
 
 			if body, kind := fetcher.FetchNewer(); !(bytes.Equal(kind, []byte("jpeg")) && bytes.Equal(catRaw, body)) {
 				t.Fatal("images do not match")
@@ -76,7 +77,7 @@ func TestFetcherFetchNewer(t *testing.T) {
 
 func BenchmarkFetcherFetchNewer(b *testing.B) {
 	fetcher := NewFetcher()
-	fetcher.SR.SetList([]string{"http://" + addr})
+	fetcher.SR.Load(strings.NewReader("http://" + addr))
 
 	for i := 0; i < b.N; i++ {
 		fetcher.FetchNewer()

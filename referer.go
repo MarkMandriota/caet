@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-var rWebReference = regexp.MustCompile(`https?://(\S*\.)+[^\s\W]+`)
+var rWebReference = regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)`)
 
 type SingularReferer struct {
 	m sync.Mutex
@@ -31,15 +31,11 @@ type SingularReferer struct {
 	list []string
 }
 
-func (r *SingularReferer) SetList(list []string) {
-	r.list = list
-}
-
-func (r *SingularReferer) Load(urls io.Reader) error {
+func (r *SingularReferer) Load(cfg io.Reader) error {
 	r.m.Lock()
-	scanner := bufio.NewScanner(urls)
+	scanner := bufio.NewScanner(cfg)
 
-	if urls != nil {
+	if cfg != nil {
 		r.list = r.list[:0]
 	}
 
@@ -53,10 +49,10 @@ func (r *SingularReferer) Load(urls io.Reader) error {
 	return scanner.Err()
 }
 
-func (r *SingularReferer) Next() (url string) {
+func (r *SingularReferer) Next() (ref string) {
 	r.m.Lock()
-	url = r.list[rand.Intn(len(r.list))]
+	ref = r.list[rand.Intn(len(r.list))]
 
 	r.m.Unlock()
-	return url
+	return ref
 }

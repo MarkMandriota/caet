@@ -25,11 +25,12 @@ Flags:
         cats destination directory (default "cats")
   -n int
         number of cats to fetch (default 9)
-  -p string
-        random cats providers splited by ";" (default "https://thiscatdoesnotexist.com/;https://api.thecatapi.com/v1/images/search")
 ```
 
 Example:
 ```bash
-caet -d cat_pics -p "https://api.thecatapi.com/v1/images/search" -n 96 -N 8
+echo "https://api.thecatapi.com/v1/images/search" | caet -d cat_pics -n 96 -N 8
 ```
+
+# TODO
+* Add header key value pairs support

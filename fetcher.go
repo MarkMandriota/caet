@@ -76,8 +76,8 @@ next:
 				goto next
 			}
 
-			http.ReleaseRequest(req)
 			http.ReleaseResponse(res)
+			http.ReleaseRequest(req)
 			return body, kind
 		}
 

@@ -22,16 +22,14 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"strings"
 
 	"github.com/MarkMandriota/caet"
 )
 
 var (
 	dstD = flag.String(`d`, `cats`, `cats destination directory`)
-	catP = flag.String(`p`, `https://thiscatdoesnotexist.com/;https://api.thecatapi.com/v1/images/search`, `random cats providers splited by ";"`)
 	catN = flag.Int(`n`, 9, `number of cats to fetch`)
-	numW = flag.Int(`N`, runtime.NumCPU(), `number of workers`)
+	proN = flag.Int(`p`, runtime.NumCPU(), `number of processes`)
 )
 
 func init() {
@@ -43,15 +41,13 @@ func main() {
 
 	fetcher := caet.NewFetcher()
 
-	if *catP != "" {
-		fetcher.SR.SetList(strings.Split(*catP, ";"))
-	} else if err := fetcher.SR.Load(os.Stdin); err != nil {
+	if err := fetcher.SR.Load(os.Stdin); err != nil {
 		log.Fatalln(err)
 	}
 
 	ctx := context.Background()
 
-	for i := *numW; i > 0; i-- {
+	for i := *proN; i > 0; i-- {
 		go fetcher.Run(ctx, cats)
 	}
 

@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	http "github.com/valyala/fasthttp"
+	proxy "github.com/valyala/fasthttp/fasthttpproxy"
 )
 
 type CatFile struct {
@@ -42,7 +43,9 @@ type Fetcher struct {
 
 func NewFetcher() *Fetcher {
 	return &Fetcher{
-		client: &http.Client{},
+		client: &http.Client{
+			Dial: proxy.FasthttpProxyHTTPDialer(),
+		},
 	}
 }
 

@@ -17,7 +17,7 @@ package caet
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/sha1"
 	"sync"
 
 	http "github.com/valyala/fasthttp"
@@ -75,7 +75,7 @@ next:
 		body = res.Body()
 
 		if bytes.Equal(mode, []byte("image")) {
-			if _, ok := f.hashes.LoadOrStore(md5.Sum(body), struct{}{}); ok {
+			if _, ok := f.hashes.LoadOrStore(sha1.Sum(body), struct{}{}); ok {
 				goto next
 			}
 

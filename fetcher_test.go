@@ -16,7 +16,7 @@ import (
 var catRaw []byte
 
 const (
-	addr = "localhost:9090"
+	addr = "127.0.0.1:9090"
 
 	dPath = "/"
 
@@ -49,6 +49,7 @@ func init() {
 }
 
 func TestFetcherFetchNewer(t *testing.T) {
+	t.Log("starting test...")
 	tests := []struct {
 		name string
 		addr string
@@ -66,8 +67,10 @@ func TestFetcherFetchNewer(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			fetcher := NewFetcher()
+			t.Log("loading configuration...")
 			fetcher.SR.Load(strings.NewReader(test.addr))
 
+			t.Log("fetching newer...")
 			if body, kind := fetcher.FetchNewer(); !(bytes.Equal(kind, []byte("jpeg")) && bytes.Equal(catRaw, body)) {
 				t.Fatal("images do not match")
 			}
